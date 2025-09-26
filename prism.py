@@ -1,10 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox, StringVar
 from PIL import ImageTk, Image
-# Asumo que estos ficheros existen en tu proyecto
-from constants import EXPECTED_SECRET_LENGTH_BYTES
 from shamir import ShamirSecret
-import binascii # Necesario para la gestión de errores específicos
 
 
 class Spinbox(ctk.CTkFrame):
@@ -19,6 +16,7 @@ class Spinbox(ctk.CTkFrame):
         command=None,
         **kwargs
     ):
+        """Initialize the Spinbox widget."""
         super().__init__(*args, width=width, height=height, **kwargs)
 
         self.step_size = step_size
@@ -40,12 +38,14 @@ class Spinbox(ctk.CTkFrame):
         self.add_button.grid(row=0, column=2, padx=(0, 3), pady=3)
 
     def increment_value(self):
+        """Increment the spinbox value."""
         current_value = int(self.value_var.get())
         self.value_var.set(str(current_value + self.step_size))
         if self.command:
             self.command()
 
     def decrement_value(self):
+        """Decrement the spinbox value, ensuring it doesn't go below min_value."""
         current_value = int(self.value_var.get())
         new_value = max(self.min_value, current_value - self.step_size)
         self.value_var.set(str(new_value))
@@ -53,9 +53,11 @@ class Spinbox(ctk.CTkFrame):
             self.command()
 
     def get(self) -> int:
+        """Get the current value of the spinbox as an integer."""
         return int(self.value_var.get())
 
     def set(self, value: int):
+        """Set the spinbox to a specific value, ensuring it doesn't go below min_value."""
         self.value_var.set(str(max(self.min_value, value)))
 
 
@@ -117,7 +119,7 @@ class Prism(ctk.CTk):
         input_frame = ctk.CTkFrame(tab, fg_color="transparent")
         input_frame.pack(padx=10, pady=(20, 10), fill="x")
 
-        ctk.CTkLabel(input_frame, text=f"Secret").pack(anchor="w")
+        ctk.CTkLabel(input_frame, text="Secret").pack(anchor="w")
 
         secret_input_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
         secret_input_frame.pack(pady=5, fill="x")
@@ -181,7 +183,6 @@ class Prism(ctk.CTk):
 
         self.decode_result_output = self._create_result_widgets(tab, result_name="Secret")
 
-
     def paste_shares_to_textbox(self):
         """Paste clipboard content into the shares textbox."""
         try:
@@ -241,8 +242,8 @@ class Prism(ctk.CTk):
             shares_text = self.shares_input.get("1.0", "end-1c").strip()
 
             if not shares_text:
-                 messagebox.showwarning("Input Error", "Please paste the parts to decode.")
-                 return
+                messagebox.showwarning("Input Error", "Please paste the parts to decode.")
+                return
 
             reconstructed_secret, msg = ShamirSecret.combine(shares_text.splitlines())
 
