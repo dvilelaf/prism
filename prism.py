@@ -1,10 +1,89 @@
 from pathlib import Path
 from tkinter import StringVar, messagebox
 
+EXPECTED_SECRET_LENGTH_BYTES = (
+    16  # Expected length by PyCryptodome for SecretSharing.split with bytes
+)
+
+import binascii
+from typing import List
+
 import customtkinter as ctk
+from Crypto.Protocol.SecretSharing import Shamir
 from PIL import Image, ImageTk
 
-from prism.shamir import ShamirSecret
+
+class ShamirSecret:
+    """Class to handle Shamir's Secret Sharing operations"""
+
+    @classmethod
+    def split(cls, k: int, n: int, secret: str):
+        """Split the secret into n shares with a threshold of k"""
+
+        if k <= 1 or n < k:
+            return None, "Invalid parameters: ensure that n >= k > 1."
+        secret_bytes = secret.encode("utf-8")
+
+        if len(secret_bytes) > EXPECTED_SECRET_LENGTH_BYTES:
+            return (
+                None,
+                f"Secret too long: must be at most {EXPECTED_SECRET_LENGTH_BYTES} bytes",
+            )
+
+        if len(secret_bytes) < EXPECTED_SECRET_LENGTH_BYTES:
+            secret_bytes = secret_bytes.ljust(
+                EXPECTED_SECRET_LENGTH_BYTES, b"\x00"
+            )  # Pad with null bytes
+
+        if len(secret_bytes) != EXPECTED_SECRET_LENGTH_BYTES:
+            return (
+                None,
+                f"Secret must be exactly {EXPECTED_SECRET_LENGTH_BYTES} bytes after padding",
+            )
+
+        shares = Shamir.split(k, n, secret_bytes)
+
+        formatted_shares = []
+        for index, share_data in shares:
+            formatted_shares.append(
+                f"{index}-{binascii.hexlify(share_data).decode('ascii')}"
+            )
+        return formatted_shares, "OK"
+
+    @classmethod
+    def combine(cls, shares: List[str]):
+        """Combine shares to reconstruct the secret"""
+
+        shares = [s.strip() for s in shares if s.strip()]
+
+        prepared_shares = []
+        for share in shares:
+            parts = share.split("-")
+            if len(parts) != 2:
+                return None, "Incorrect share format. Must be 'index: secret_part'."
+            idx = int(parts[0].strip())
+            share_bytes = binascii.unhexlify(parts[1].strip())
+            prepared_shares.append((idx, share_bytes))
+
+        # Ensure there's no duplicate indices
+        indices = [idx for idx, _ in prepared_shares]
+        if len(indices) != len(set(indices)):
+            return (
+                None,
+                "Duplicate share indices detected. Each share must have a unique index.",
+            )
+
+        secret_bytes = Shamir.combine(prepared_shares)
+        try:
+            secret = secret_bytes.rstrip(b"\x00").decode(
+                "utf-8"
+            )  # Remove padding and decode
+        except UnicodeDecodeError:
+            return (
+                None,
+                "You probably don't have enough valid parts to reconstruct this secret.",
+            )
+        return secret, "OK"
 
 
 class Spinbox(ctk.CTkFrame):
@@ -91,11 +170,11 @@ class Prism(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Prism")
-        self.geometry("800x900")
-        self.resizable(False, False)
+    # Open in normal mode (no maximized)
+        self.resizable(True, True)
 
         try:
-            image = Image.open(Path("prism", "icon.png"))
+            image = Image.open(Path("icon.png"))
             image = image.resize((128, 128), Image.LANCZOS)
             icon = ImageTk.PhotoImage(image)
             self.iconphoto(False, icon)
@@ -110,12 +189,13 @@ class Prism(ctk.CTk):
     def create_widgets(self):
         """Create and arrange all widgets in the main window."""
         main_frame = ctk.CTkFrame(self)
-        main_frame.pack(padx=20, pady=20, fill="both", expand=True)
+        main_frame.pack(fill="both", expand=True, padx=12, pady=(0,18))
+        main_frame.grid_rowconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(0, weight=1)
 
         self.tabview = ctk.CTkTabview(main_frame)
-        self.tabview.pack(padx=20, pady=20, fill="both", expand=True)
+        self.tabview.pack(fill="both", expand=True)
 
-        # CAMBIO: Añadidos espacios para separar visualmente las pestañas
         self.tabview.add("  Encode Secret  ")
         self.tabview.add("  Decode Secret  ")
 
@@ -125,13 +205,12 @@ class Prism(ctk.CTk):
     def _create_result_widgets(self, parent_tab, result_name="Result"):
         """Creates the result section widgets for a given tab."""
         result_frame = ctk.CTkFrame(parent_tab, fg_color="transparent")
-        result_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        result_frame.pack(fill="both", expand=True)
 
-        ctk.CTkLabel(result_frame, text="", font=ctk.CTkFont(weight="bold")).pack(
-            anchor="w"
-        )
+        ctk.CTkLabel(result_frame, text="", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
 
-        result_output = ctk.CTkTextbox(result_frame, state="disabled")
+        width = int(self.winfo_screenwidth() * 0.1)
+        result_output = ctk.CTkTextbox(result_frame, state="disabled", width=width)
         result_output.pack(pady=5, fill="both", expand=True)
 
         copy_button = ctk.CTkButton(
@@ -148,12 +227,12 @@ class Prism(ctk.CTk):
         """Create widgets for the Encode Secret tab."""
         # CAMBIO: Añadido padding superior con pady=(20, 10)
         input_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        input_frame.pack(padx=10, pady=(20, 10), fill="x")
+        input_frame.pack(fill="x", expand=True)
 
         ctk.CTkLabel(input_frame, text="Secret").pack(anchor="w")
 
         secret_input_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
-        secret_input_frame.pack(pady=5, fill="x")
+        secret_input_frame.pack(fill="x", expand=True)
         secret_input_frame.grid_columnconfigure(0, weight=1)
 
         self.secret_entry = ctk.CTkEntry(
@@ -162,7 +241,7 @@ class Prism(ctk.CTk):
         self.secret_entry.grid(row=0, column=0, sticky="ew")
 
         param_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
-        param_frame.pack(fill="x", pady=(30, 0))
+        param_frame.pack(fill="x", expand=True)
         param_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(param_frame, text="Total parts").grid(row=0, column=0, sticky="w")
@@ -184,7 +263,7 @@ class Prism(ctk.CTk):
         encode_button = ctk.CTkButton(
             tab, text="Generate Parts", command=self.encode_secret
         )
-        encode_button.pack(padx=10, pady=30)
+        encode_button.pack(pady=10)
 
         self.encode_result_output = self._create_result_widgets(
             tab, result_name="Parts"
@@ -211,12 +290,12 @@ class Prism(ctk.CTk):
         """Create widgets for the Decode Secret tab."""
         # CAMBIO: Añadido padding superior con pady=(20, 10)
         input_frame = ctk.CTkFrame(tab, fg_color="transparent")
-        input_frame.pack(padx=10, pady=(20, 10), fill="x")
+        input_frame.pack(fill="x", expand=True)
 
         ctk.CTkLabel(input_frame, text="Parts").pack(anchor="w")
 
         shares_input_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
-        shares_input_frame.pack(pady=5, fill="x")
+        shares_input_frame.pack(fill="x", expand=True)
         shares_input_frame.grid_columnconfigure(0, weight=1)
 
         self.shares_input = ctk.CTkTextbox(shares_input_frame, height=150)
@@ -233,7 +312,7 @@ class Prism(ctk.CTk):
         decode_button = ctk.CTkButton(
             tab, text="Reconstruct Secret", command=self.decode_secret
         )
-        decode_button.pack(padx=10, pady=15)
+        decode_button.pack(pady=10)
 
         self.decode_result_output = self._create_result_widgets(
             tab, result_name="Secret"
@@ -324,3 +403,8 @@ class Prism(ctk.CTk):
         output_widget.delete("1.0", "end")
         output_widget.insert("1.0", text)
         output_widget.configure(state="disabled")
+
+
+if __name__ == "__main__":
+    prism = Prism()
+    prism.mainloop()

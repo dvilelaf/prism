@@ -1,17 +1,17 @@
 .PHONY: formatters
 formatters:
-	black run.py prism
-	isort run.py prism
+	black prism.py
+	isort prism.py
 
 .PHONY: code-check
 code-check:
-	black --check run.py prism
-	isort --check run.py prism
-	darglint run.py prism
-	flake8 run.py prism
-	pylint run.py prism
-	mypy run.py prism
+	black --check prism.py
+	isort --check prism.py
+	darglint prism.py
+	flake8 prism.py
+	pylint prism.py
+	mypy prism.py
 
 .PHONY: build
 build:
-	pyinstaller --onefile --windowed --name="Prism" run.py
+	pyinstaller --onefile --windowed --name="prism" prism.py

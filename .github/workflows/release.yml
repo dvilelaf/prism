@@ -13,14 +13,14 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-22.04, macos-latest, windows-latest]
         include:
-          - os: ubuntu-latest
-            asset_name: mi_app-linux
+          - os: ubuntu-22.04
+            asset_name: prism-linux
           - os: macos-latest
-            asset_name: mi_app-macos
+            asset_name: prism-macos
           - os: windows-latest
-            asset_name: mi_app.exe
+            asset_name: prism.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -40,7 +40,7 @@ jobs:
         pip install pyinstaller
 
     - name: Build with PyInstaller
-      run: pyinstaller --onefile --windowed --name ${{ matrix.asset_name }} run.py
+      run: pyinstaller --onefile --windowed --name ${{ matrix.asset_name }} prism.py
 
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
