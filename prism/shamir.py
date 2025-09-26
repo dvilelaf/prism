@@ -39,7 +39,7 @@ class ShamirSecret:
         formatted_shares = []
         for index, share_data in shares:
             formatted_shares.append(
-                f"{index}: {binascii.hexlify(share_data).decode("ascii")}"
+                f"{index}-{binascii.hexlify(share_data).decode("ascii")}"
             )
         return formatted_shares, "OK"
 
@@ -51,7 +51,7 @@ class ShamirSecret:
 
         prepared_shares = []
         for share in shares:
-            parts = share.split(":")
+            parts = share.split("-")
             if len(parts) != 2:
                 return None, "Incorrect share format. Must be 'index: secret_part'."
             idx = int(parts[0].strip())
