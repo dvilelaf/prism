@@ -1,3 +1,4 @@
+from pathlib import Path
 from tkinter import StringVar, messagebox
 
 import customtkinter as ctk
@@ -94,7 +95,7 @@ class Prism(ctk.CTk):
         self.resizable(False, False)
 
         try:
-            image = Image.open("./prism/icon.png")
+            image = Image.open(Path("prism", "icon.png"))
             image = image.resize((128, 128), Image.LANCZOS)
             icon = ImageTk.PhotoImage(image)
             self.iconphoto(False, icon)

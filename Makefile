@@ -11,3 +11,7 @@ code-check:
 	flake8 run.py prism
 	pylint run.py prism
 	mypy run.py prism
+
+.PHONY: build
+build:
+	pyinstaller --onefile --windowed --name="Prism" run.py
