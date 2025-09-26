@@ -1,7 +1,9 @@
-from Crypto.Protocol.SecretSharing import Shamir
 import binascii
 from typing import List
-from constants import EXPECTED_SECRET_LENGTH_BYTES
+
+from Crypto.Protocol.SecretSharing import Shamir
+
+from prism.constants import EXPECTED_SECRET_LENGTH_BYTES
 
 
 class ShamirSecret:
@@ -13,22 +15,32 @@ class ShamirSecret:
 
         if k <= 1 or n < k:
             return None, "Invalid parameters: ensure that n >= k > 1."
-        secret_bytes = secret.encode('utf-8')
+        secret_bytes = secret.encode("utf-8")
 
         if len(secret_bytes) > EXPECTED_SECRET_LENGTH_BYTES:
-            return None, f"Secret too long: must be at most {EXPECTED_SECRET_LENGTH_BYTES} bytes"
+            return (
+                None,
+                f"Secret too long: must be at most {EXPECTED_SECRET_LENGTH_BYTES} bytes",
+            )
 
         if len(secret_bytes) < EXPECTED_SECRET_LENGTH_BYTES:
-            secret_bytes = secret_bytes.ljust(EXPECTED_SECRET_LENGTH_BYTES, b"\x00")  # Pad with null bytes
+            secret_bytes = secret_bytes.ljust(
+                EXPECTED_SECRET_LENGTH_BYTES, b"\x00"
+            )  # Pad with null bytes
 
         if len(secret_bytes) != EXPECTED_SECRET_LENGTH_BYTES:
-            return None, f"Secret must be exactly {EXPECTED_SECRET_LENGTH_BYTES} bytes after padding"
+            return (
+                None,
+                f"Secret must be exactly {EXPECTED_SECRET_LENGTH_BYTES} bytes after padding",
+            )
 
         shares = Shamir.split(k, n, secret_bytes)
 
         formatted_shares = []
         for index, share_data in shares:
-            formatted_shares.append(f"{index}: {binascii.hexlify(share_data).decode("ascii")}")
+            formatted_shares.append(
+                f"{index}: {binascii.hexlify(share_data).decode("ascii")}"
+            )
         return formatted_shares, "OK"
 
     @classmethod
@@ -49,11 +61,19 @@ class ShamirSecret:
         # Ensure there's no duplicate indices
         indices = [idx for idx, _ in prepared_shares]
         if len(indices) != len(set(indices)):
-            return None, "Duplicate share indices detected. Each share must have a unique index."
+            return (
+                None,
+                "Duplicate share indices detected. Each share must have a unique index.",
+            )
 
         secret_bytes = Shamir.combine(prepared_shares)
         try:
-            secret = secret_bytes.rstrip(b"\x00").decode("utf-8")  # Remove padding and decode
+            secret = secret_bytes.rstrip(b"\x00").decode(
+                "utf-8"
+            )  # Remove padding and decode
         except UnicodeDecodeError:
-            return None, "You probably don't have enough valid parts to reconstruct this secret."
+            return (
+                None,
+                "You probably don't have enough valid parts to reconstruct this secret.",
+            )
         return secret, "OK"
