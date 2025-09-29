@@ -170,7 +170,7 @@ class Prism(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Prism")
-    # Open in normal mode (no maximized)
+        # Open in normal mode (no maximized)
         self.resizable(True, True)
 
         try:
@@ -189,7 +189,7 @@ class Prism(ctk.CTk):
     def create_widgets(self):
         """Create and arrange all widgets in the main window."""
         main_frame = ctk.CTkFrame(self)
-        main_frame.pack(fill="both", expand=True, padx=12, pady=(0,18))
+        main_frame.pack(fill="both", expand=True, padx=12, pady=(0, 18))
         main_frame.grid_rowconfigure(0, weight=1)
         main_frame.grid_columnconfigure(0, weight=1)
 
@@ -207,7 +207,9 @@ class Prism(ctk.CTk):
         result_frame = ctk.CTkFrame(parent_tab, fg_color="transparent")
         result_frame.pack(fill="both", expand=True)
 
-        ctk.CTkLabel(result_frame, text="", font=ctk.CTkFont(weight="bold")).pack(anchor="w")
+        ctk.CTkLabel(result_frame, text="", font=ctk.CTkFont(weight="bold")).pack(
+            anchor="w"
+        )
 
         width = int(self.winfo_screenwidth() * 0.1)
         result_output = ctk.CTkTextbox(result_frame, state="disabled", width=width)
