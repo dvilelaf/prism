@@ -15,19 +15,18 @@ Prism is a multi-platform GUI and CLI tool for splitting and reconstructing secr
     <img src="./screenshot.png" alt="Screenshot" width="400"/>
 </p>
 
-## Installation
+## Using the GUI
 
-Install dependencies using Poetry:
+### Optiona A: use pre-built binaries
+Find the latest releases [in the Releases section](https://github.com/dvilelaf/prism/releases).
+
+
+### Option B: run the code directly
+Install [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) and run:
 
 ```bash
+poetry shell
 poetry install
-```
-
-## Running the GUI
-
-Start the graphical application:
-
-```bash
 python prism.py
 ```
 
@@ -65,5 +64,3 @@ To build a standalone executable:
 ```bash
 make build
 ```
-
-Also find the latest releases [in the Releases section](https://github.com/dvilelaf/prism/releases).
