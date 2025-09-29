@@ -2,6 +2,10 @@
 
 Prism is a multi-platform GUI and CLI tool for splitting and reconstructing secrets using [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing). It allows you to securely divide a secret (such as a password or recovery key) into multiple parts, requiring only a subset of those parts to reconstruct the original secret. This is useful for secure backup, key management, and sharing sensitive information among trusted parties.
 
+> **⚠️ Windows Security Warning:**
+> Some versions of Windows Defender or other antivirus software may mistakenly detect Prism as malware when running the standalone executable. This is a false positive caused by the way cryptographic and packaging tools work.
+> If you trust the source and downloaded Prism from the official repository, you can safely ignore this warning and allow the program to run.
+
 ## Features
 
 - **Split secrets:** Divide a secret into _n_ parts, with a configurable threshold _k_ needed to reconstruct it.
@@ -17,7 +21,7 @@ Prism is a multi-platform GUI and CLI tool for splitting and reconstructing secr
 
 ## Using the GUI
 
-### Optiona A: use pre-built binaries
+### Option A: use pre-built binaries
 Find the latest releases [in the Releases section](https://github.com/dvilelaf/prism/releases).
 
 
@@ -62,5 +66,5 @@ python cli.py combine -f shares.txt
 To build a standalone executable:
 
 ```bash
-make build
+make
 ```
